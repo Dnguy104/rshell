@@ -702,6 +702,11 @@ int main()
     //{
     //	cout << testvec.at(i) << endl;
     //}
+
+    char HOST[128];
+    gethostname(HOST, sizeof HOST);
+    char *USER = getlogin(); 
+    cout << USER << "@" << HOST << "$ ";
     while (mainstr != exitstr)
     {
     string mainstr = "";
@@ -715,16 +720,7 @@ int main()
 	//cout << " Current string: " << mainstr << endl;
 	breakstring(mainstr, Op);
 	Op = 0;
-	//cout << "String Broken" << endl;
-	//Op->execution();
-	// Base* T1 = new Command(testing);
-	// T1->addArg("\0");
-	// Base* T2 = new Command(testing);
-	// T2->addArg("\0");
-	// Base* Test = new Scolon(T1, T2);
-	// T1 = 0;
-	// T2 = 0;
-	// Test->execution();
+
     }
    return 0;
 }

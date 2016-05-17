@@ -44,7 +44,7 @@ if connectors are not properly spaced it may not read correctly
 
 single quotations might not be read
 
-
+a common bug is that the program might not take in the input if it is just one character
 
 
 
