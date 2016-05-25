@@ -706,20 +706,20 @@ int main()
     char HOST[128];
     gethostname(HOST, sizeof HOST);
     char *USER = getlogin(); 
-    cout << USER << "@" << HOST << "$ ";
+
     while (mainstr != exitstr)
     {
-    string mainstr = "";
-
-    //cout << "Please enter command: " << endl;
-    getline (cin, mainstr);
-        if (mainstr == exitstr)
-    {
-    	return 0;
-    }
-	//cout << " Current string: " << mainstr << endl;
-	breakstring(mainstr, Op);
-	Op = 0;
+	    string mainstr = "";
+	    cout << USER << "@" << HOST << "$ ";
+	    //cout << "Please enter command: " << endl;
+	    getline (cin, mainstr);
+	        if (mainstr == exitstr)
+	    {
+	    	return 0;
+	    }
+		//cout << " Current string: " << mainstr << endl;
+		breakstring(mainstr, Op);
+		Op = 0;
 
     }
    return 0;

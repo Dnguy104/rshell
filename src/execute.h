@@ -60,6 +60,7 @@ class Connector: public Base
 	    {
 	    	this->rightChild = right;
 	    }
+
 	    virtual bool execution() = 0;
 	    virtual void addArg(string temp) {}
 };
@@ -112,6 +113,12 @@ class ANND: public Connector {
 	    {
 	    	this->rightChild = right;
 	    }
+	    // ~ANND()
+	    // {
+	    // 	delete leftChild;
+	    // 	delete rightChild;
+	    // 	delete this;
+	    // }
 	    virtual bool execution();
 	    virtual void addArg(string temp) {}
 };

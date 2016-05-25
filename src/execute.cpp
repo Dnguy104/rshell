@@ -24,6 +24,12 @@ bool Command::execution()
     
     //cout << "Starting exicution" << endl;
     
+    for (unsigned int i = 0; i < argList.size(); i++)
+    {
+    	cout << argList.at(i) << " ";
+    }
+    cout << endl;
+    
 	char** newArg = new char*[this->argList.size() + 1];
 
 	if(this->command == "exit")
