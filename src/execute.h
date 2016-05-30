@@ -10,6 +10,8 @@
 #include <sys/wait.h>
 #include <vector>
 #include <cstdlib>
+#include <sys/types.h>
+#include <sys/stat.h>
 using namespace std;
 
 class Base;
@@ -31,6 +33,7 @@ class Base
     	}
     	virtual bool execution() = 0;
     	virtual void addArg(string temp) = 0;
+    	virtual void testfunc(const vector <string> &list, bool &res) = 0;
 };
 
 
@@ -63,6 +66,7 @@ class Connector: public Base
 
 	    virtual bool execution() = 0;
 	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res) {}
 };
 
 
@@ -78,15 +82,16 @@ class Command: public Base
 	    }
 	    Command(vector<string> cmd)
 	    {
-	    	command ="Cmd";
+	    	command = cmd.at(0);
 	    	argList = cmd;
 	    }
 	    Command(string cmd)
 	    {
-	    	command ="Cmd";
+	    	command = cmd;
 	    }
 
 	    virtual void addArg(string temp);
+	    virtual void testfunc(const vector <string> &list, bool &res);
 	    virtual bool execution();
 
 };
@@ -121,6 +126,7 @@ class ANND: public Connector {
 	    // }
 	    virtual bool execution();
 	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res) {}
 };
 
 class Scolon: public Connector {
@@ -147,6 +153,7 @@ class Scolon: public Connector {
 	    }
 	    virtual bool execution();
 	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res) {}
 };
 
 
@@ -174,10 +181,10 @@ class ORR: public Connector {
     	//execute function
     	virtual bool execution();
     	virtual void addArg(string temp) {}
+    	virtual void testfunc(const vector <string> &list, bool &res) {}
 };
 
 
 
 
 #endif
-

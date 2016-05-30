@@ -7,6 +7,8 @@
 #include <sys/wait.h>
 #include <vector>
 #include <cstdlib>
+#include <sys/types.h>
+#include <sys/stat.h>
 using namespace std;
 
 #include "execute.h"
@@ -18,19 +20,105 @@ void Command::addArg(string temp)
 	return;
 }
 
+void Command::testfunc(const vector <string> &list, bool &res)
+{
+	struct stat temp;
+	string flag;
+	string pathF;
+	
+	if (list.size() == 2) // tests whether the length of the 
+	{						// command is correct
+		flag = "-e";
+		pathF = list.at(1);
+	}
+	else if ( list.size() == 3)
+	{
+		flag = list.at(1);
+		pathF = list.at(2);
+	}
+	else
+	{
+		res = false;
+		return;
+	}
+	
+	if (stat(pathF.c_str(),&temp) == 0) // tests whether file exists
+	{
+		res = true;
+	}
+	else
+	{
+		res = false; // does not exist
+		perror("stat");
+		return;
+	}
+	
+	
+	if (flag == "-e") 
+	{
+		cout << "(true)" << endl;
+        res = true;
+        return;
+	}
+	else if (flag == "-f") 
+	{								// tests if it is a regular file
+        if (S_ISREG(temp.st_mode)) 
+        {
+            cout << "(true)" << endl;
+            res = true;
+            return;
+            
+        }
+        else 
+        {					
+            cout << "(false)" << endl;
+            res = false;
+            return;
+        }
+    }
+    else if (flag == "-d") 
+	{								// tests if it is a directory
+        if (S_ISDIR(temp.st_mode)) 
+        {
+            cout << "(true)" << endl;
+            res = true;
+            return;
+        }
+        else 
+        {
+            cout << "(false)" << endl;
+            res = false;
+            return;
+        }
+    }
+	else 				// if the flag is invalid, it will ouput error
+	{
+        cout << "Error:" << flag << " is not a valid flag."  << endl;
+        res = false;
+        return;
+    }  
+
+}
+
 
 bool Command::execution()
 {
-    
+    bool result = true; // this is the return bool
     //cout << "Starting exicution" << endl;
     
-    for (unsigned int i = 0; i < argList.size(); i++)
+    if (argList[0] == "test")
     {
-    	cout << argList.at(i) << " ";
+    	testfunc(argList, result);
+    	return result;
     }
-    cout << endl;
     
-	char** newArg = new char*[this->argList.size() + 1];
+    // for (unsigned int i = 0; i < argList.size(); i++)
+    // {
+    // 	cout << argList.at(i) << " ";
+    // }
+    // cout << endl;
+    
+	char** newArg = new char* [this->argList.size() + 1];
 
 	if(this->command == "exit")
 	{
@@ -56,8 +144,6 @@ bool Command::execution()
 
 	// cout << this->command << endl;
 
-
-	bool result = true;
 	
 	//cout << "Passed bool result = true" << endl;
 	
@@ -89,7 +175,7 @@ bool Command::execution()
 	        	perror("wait");
 	    	}
 	            
-	        if ( WEXITSTATUS(status) == 1 ) 
+	        if ( WEXITSTATUS(status) > 0 || WEXITSTATUS(status) < 0 ) 
 	        {
 	            result = false;
 	        }
@@ -218,11 +304,4 @@ bool Scolon::execution()
 	
 // 	return 0;
 // }
-
-
-
-
-
-
-
 
