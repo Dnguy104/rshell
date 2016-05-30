@@ -16,6 +16,12 @@ Our program will take in raw input and process it into three groups; operators, 
 
 Syntax: `command [argument list] [connector]`
 
+###Additions
+An addition to this assignment is to include test functionality. By using the test
+command, or square brackets [], the user can test to see whether a file path exists.
+Another addition is precedence functionality. With this, a user will be able to 
+seperate commands using parentheses (). This will alter the input, and change the 
+order of commands.
 
 ##Instructions on installation and usage
 
@@ -56,7 +62,3 @@ a common bug is that the program might not take in the input if it is just one c
 Please read the terms specified in the [LICENSE] file.
 
 [LICENSE]: /LICENSE
-
-
-##About
-This custom shell is made as an assignment for academic reasons.
