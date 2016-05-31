@@ -6,8 +6,6 @@ https://github.com/Crese002/
 
 
 #rshell
-============
-
 Rshell is a command shell that is designed to emulate the actual BASH terminal. It should be able to output the username and machine name, read in the command line input, parse it, and execute the bash functions correctly.
 	Our job is to create a command prompt shell that has 3 different possible 
 functions, including “;” , “&&” and “||”. Any semi-colon will cause the next command to occur, any AND operator will execute the following command only if the first one passes, and any OR operator will execute the second command only if the first one fails. The program will also ignore all inputs after a # input.
