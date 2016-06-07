@@ -49,7 +49,8 @@ void Command::testfunc(const vector <string> &list, bool &res)
 	else
 	{
 		res = false; // does not exist
-		perror("stat");
+		//perror("stat");
+		cout << "(false)" << endl;
 		return;
 	}
 	
