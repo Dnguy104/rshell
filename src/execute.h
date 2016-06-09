@@ -12,6 +12,9 @@
 #include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include <fcntl.h>
+#include <unistd.h>
 using namespace std;
 
 class Base;
@@ -31,9 +34,16 @@ class Base
     	{
     		return command;
     	}
-    	virtual bool execution() = 0;
+    	
+    	void addcommand (string cmd)
+    	{
+    		command = cmd;
+    	}
+    	virtual void clearvec() = 0;
+    	virtual bool execution(int input, int output) = 0;
     	virtual void addArg(string temp) = 0;
-    	virtual void testfunc(const vector <string> &list, bool &res) = 0;
+    	virtual void testfunc(const vector <string> &list, bool &res, 
+    		int input, int output) = 0;
 };
 
 
@@ -47,11 +57,13 @@ class Connector: public Base
 	    //constructors
 	    Connector()
 	    {
+	    	command = "Cnt";
 	    	this->leftChild = NULL;
 	    	this->rightChild = NULL;
 	    }
 	    Connector(Base* left, Base* right)
 	    {
+	    	command = "Cnt";
 	    	this->leftChild = left;
 	    	this->rightChild = right;
 	    }
@@ -63,11 +75,103 @@ class Connector: public Base
 	    {
 	    	this->rightChild = right;
 	    }
-
-	    virtual bool execution() = 0;
+	    virtual void clearvec() {}
+	    virtual bool execution(int input, int output) = 0;
 	    virtual void addArg(string temp) {}
-	    virtual void testfunc(const vector <string> &list, bool &res) {}
+	    virtual void testfunc(const vector <string> &list, bool &res, 
+	    	int input, int output) {}
 };
+
+class Pipe: public Connector {
+	public:
+		Pipe(): Connector() {}
+	    Pipe(Base* left, Base* right): Connector(left, right) {}
+
+	    virtual void addLeft(Base* left)
+	    {
+	    	this->leftChild = left;
+	    }
+	    virtual void addRight(Base* right)
+	    {
+	    	this->rightChild = right;
+	    }
+		virtual void clearvec() {}
+	    virtual bool execution(int input, int output);
+	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output) {}
+	
+};
+
+class Input: public Connector {
+	public:
+		Input(): Connector() {}
+	    Input(Base* left, Base* right): Connector(left, right) {}
+
+	    virtual void addLeft(Base* left)
+	    {
+	    	this->leftChild = left;
+	    }
+	    virtual void addRight(Base* right)
+	    {
+	    	this->rightChild = right;
+	    }
+	    virtual void clearvec() {}
+	    virtual bool execution(int input, int output);
+	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output) {}
+	
+};
+
+class Output: public Connector {
+	public:
+		Output(): Connector() {}
+	    Output(Base* left, Base* right): Connector(left, right) {}
+
+	    virtual void addLeft(Base* left)
+	    {
+	    	this->leftChild = left;
+	    }
+	    virtual void addRight(Base* right)
+	    {
+	    	this->rightChild = right;
+	    }
+	    virtual void clearvec() {}
+	    virtual bool execution(int input, int output);
+	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output) {}
+	
+};
+
+class DOutput: public Connector {
+	public:
+		DOutput(): Connector() {}
+	    DOutput(Base* left, Base* right): Connector(left, right) {}
+
+	    virtual void addLeft(Base* left)
+	    {
+	    	this->leftChild = left;
+	    }
+	    virtual void addRight(Base* right)
+	    {
+	    	this->rightChild = right;
+	    }
+	    // ~ANND()
+	    // {
+	    // 	delete leftChild;
+	    // 	delete rightChild;
+	    // 	delete this;
+	    // }
+	    virtual bool execution(int input, int output);
+	    virtual void addArg(string temp) {}
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output) {}
+	    virtual void clearvec() {}
+	
+};
+
 
 
 class Command: public Base 
@@ -89,10 +193,14 @@ class Command: public Base
 	    {
 	    	command = cmd;
 	    }
-
+	    
 	    virtual void addArg(string temp);
-	    virtual void testfunc(const vector <string> &list, bool &res);
-	    virtual bool execution();
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output);
+	    virtual bool execution(int input, int output);
+	    virtual void clearvec() {
+	    	argList.clear();
+	    }
 
 };
 
@@ -124,9 +232,11 @@ class ANND: public Connector {
 	    // 	delete rightChild;
 	    // 	delete this;
 	    // }
-	    virtual bool execution();
+	    virtual bool execution(int input, int output);
 	    virtual void addArg(string temp) {}
-	    virtual void testfunc(const vector <string> &list, bool &res) {}
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output) {}
+	    virtual void clearvec() {}
 };
 
 class Scolon: public Connector {
@@ -151,9 +261,11 @@ class Scolon: public Connector {
 	    {
 	    	this->rightChild = right;
 	    }
-	    virtual bool execution();
+	    virtual bool execution(int input, int output);
 	    virtual void addArg(string temp) {}
-	    virtual void testfunc(const vector <string> &list, bool &res) {}
+	    virtual void testfunc(const vector <string> &list, bool &res
+	    	, int input, int output) {}
+	    virtual void clearvec() {}
 };
 
 
@@ -179,9 +291,11 @@ class ORR: public Connector {
 	    	this->rightChild = right;
 	    }
     	//execute function
-    	virtual bool execution();
+    	virtual bool execution(int input, int output);
     	virtual void addArg(string temp) {}
-    	virtual void testfunc(const vector <string> &list, bool &res) {}
+    	virtual void testfunc(const vector <string> &list, bool &res
+    		, int input, int output) {}
+    	virtual void clearvec() {}
 };
 
 

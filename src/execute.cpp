@@ -9,6 +9,9 @@
 #include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include <fcntl.h>
+#include <unistd.h>
 using namespace std;
 
 #include "execute.h"
@@ -20,8 +23,23 @@ void Command::addArg(string temp)
 	return;
 }
 
-void Command::testfunc(const vector <string> &list, bool &res)
+void Command::testfunc(const vector <string> &list, bool &res
+	, int input, int output)
 {
+	if(dup2(output,1) < 0) 
+    {
+        perror("dup2");
+        res = false;
+        return;
+    }
+	if(dup2(input,0) < 0 ) 
+	{
+    	perror("dup2");
+        res = false;
+        return;
+    }
+	
+	
 	struct stat temp;
 	string flag;
 	string pathF;
@@ -49,8 +67,8 @@ void Command::testfunc(const vector <string> &list, bool &res)
 	else
 	{
 		res = false; // does not exist
-		//perror("stat");
 		cout << "(false)" << endl;
+		//perror("stat");
 		return;
 	}
 	
@@ -102,14 +120,18 @@ void Command::testfunc(const vector <string> &list, bool &res)
 }
 
 
-bool Command::execution()
+
+
+bool Command::execution(int input, int output)
 {
     bool result = true; // this is the return bool
+    int tempdup1 = 0;
+    int tempdup2 = 0;
     //cout << "Starting exicution" << endl;
     
     if (argList[0] == "test")
     {
-    	testfunc(argList, result);
+    	testfunc(argList, result, input, output);
     	return result;
     }
     
@@ -159,6 +181,25 @@ bool Command::execution()
 	{
 		if (pid == 0) //child process
 		{
+			
+			tempdup1 = dup2(output,1);
+			tempdup2 = dup2(input,0);
+			
+			
+			if(tempdup1 < 0) 
+		    {
+		        perror("dup2");
+		        result = false;
+		        return result;
+		    }
+			if(tempdup2 < 0 ) 
+			{
+		    	perror("dup2");
+		        result = false;
+		        return result;
+		    }
+			
+			
 			if(execvp(newArg[0], newArg) == -1)
 			{
 				result = false;
@@ -206,62 +247,146 @@ bool Command::execution()
 	return result;
 }
 
-		
-		
-bool ANND::execution() 
+bool Input::execution(int input, int output)
 {
-	if ( this->leftChild->execution() == true)
+	string inputfile = rightChild->getCommand();
+	int temp = open(inputfile.c_str(),O_RDONLY);
+	
+	return leftChild->execution(temp, output);
+	
+	
+}
+
+bool Output::execution(int input, int output)
+{
+	string outputfile = rightChild->getCommand();
+	//mode_t mode2 = S_IRGRP | S_IWUSR | S_IRUSR | S_IWGRP;
+	mode_t mode2 = S_IRWXU | S_IRWXG;
+	mode_t mode1 = O_TRUNC | O_WRONLY| O_CREAT;
+	int temp = open(outputfile.c_str(), mode1, mode2);
+	
+	return leftChild->execution(input, temp);
+	
+	
+}
+
+bool DOutput::execution(int input, int output)
+{
+	string outputfile = rightChild->getCommand();
+	//mode_t mode2 = S_IRGRP | S_IWUSR | S_IRUSR | S_IWGRP;
+	mode_t mode2 = S_IRWXU | S_IRWXG;
+	mode_t mode1 = O_APPEND | O_WRONLY| O_CREAT;
+	int temp = open(outputfile.c_str(), mode1, mode2);
+	
+	return leftChild->execution(input, temp);
+	
+	
+}
+		
+bool Pipe::execution(int input, int output)
+{
+	int filedescrip[2];
+
+    if(pipe(filedescrip) < 0) 
+    {
+        perror("pipe");
+        return false;
+    }
+
+
+    if(leftChild->execution(input,filedescrip[1])) 
+    {
+    	close(filedescrip[1]);
+    	
+    	if(rightChild->execution(filedescrip[0],output))
+    	{
+    		close(filedescrip[0]);
+    		return true;
+    	}	
+    	else
+    	{
+    		close(filedescrip[0]);
+    		return false;
+    	}
+    }
+    else
+    {
+    	close(filedescrip[1]);
+    	return false;
+    }
+
+	
+	
+}
+		
+		
+bool ANND::execution(int input, int output) 
+{
+	//cout << "and" << endl;
+	if ( this->leftChild->execution(input, output) == true)
 	{
-	   if(this->rightChild->execution() == true)
+	   if(this->rightChild->execution(input, output) == true)
 	   {
+		   //cout << "true" << endl;
 		   return true;
 	   }
 	   else 
 	   {
+		   //cout << "false" << endl;
 		   return false;
 	   }
 	}
 	else 
 	{
+		//cout << "false" << endl;
 		return false;
 	 }
 }
 
-bool ORR::execution() 
+bool ORR::execution(int input, int output) 
 {
-	if ( this->leftChild->execution() == true)
+	//cout << "or" << endl;
+	if ( this->leftChild->execution(input, output) == true)
 	{
+		//cout << "true" << endl;
 		return true;
 	}
 	else 
 	{
-		if(this->rightChild->execution() == true)
+		if(this->rightChild->execution(input, output) == true)
 		{
+			//cout << "true" << endl;
 			return true;
 		}
 		else 
 		{
+			//cout << "false" << endl;
 			return false;
 		}
 	}
 }
 
-bool Scolon::execution() 
+bool Scolon::execution(int input, int output) 
 {
-	this->leftChild->execution();
+	//cout << " scollon" << endl;
+	this->leftChild->execution(input, output);
+	
 	if (this->rightChild != NULL)
 	{
-		if (this->rightChild->execution() == true)
+		if (this->rightChild->execution(input, output) == true)
 		{
+			//cout << "true" << endl;
 			return true;
 		}
 		else 
 		{
+			//cout << "false" << endl;
 			return false;
 		}
 	}
 	else
 	{
+		//cout << "true" << endl;
 		return true;
 	}
 }
@@ -305,4 +430,5 @@ bool Scolon::execution()
 	
 // 	return 0;
 // }
+
 

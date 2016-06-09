@@ -30,6 +30,7 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
     string temp;
     int recursfound = 0;
     unsigned i = 0;
+    unsigned j = 0;
     Base* Ops = NULL;
     Base* Opt = NULL;
     //Base* Br1 = NULL;
@@ -69,16 +70,19 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
             //     cout << Node.at(q) << endl;
             // }
              Ops = new Command(Node);
+             Ops->addcommand(Node.at(0));
         }
         else if(temp == "]")
         {
         }
-        else if(temp == " ")
+        else if((temp == " ") || (temp.empty()))
         {
+      //      cout << "found EMPTY"  << endl;
             Ops = NULL;
         }
         else
         {
+            
             Node.push_back(temp);
             while(ss >> temp)
             {
@@ -87,6 +91,7 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
             }
           //  cout << "creating node" << endl;
             Ops = new Command(Node);
+            Ops->addcommand(Node.at(0));
         }
     }
     //cout << "count: " << count << endl;
@@ -118,7 +123,7 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
             recursfound = 1;
             count = currint;
         }
-        else if(temp == " ")
+        else if((temp == " ") || (temp.empty()))
         {
             Opt = NULL;
         }
@@ -150,6 +155,7 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
         }
         else
         {
+            //addcommand(temp);
             Node.push_back(temp);
             while(ss >> temp)
             {
@@ -157,6 +163,7 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
                 Node.push_back(temp);
             }
             Opt = new Command(Node);
+            Opt->addcommand(Node.at(0));
         }
     }
     //cout << "count: " << count << endl;
@@ -174,6 +181,7 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
     //cout << "ops size" << ops.size() << endl;
     if(!ops[count].empty())
     {
+        j++;
      //   cout << "entered" << endl;
         ss << ops[count].at(0);
     //cout << "Currently at op 0: " << ops[count].at(0) << endl;
@@ -190,16 +198,43 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
         {
             op = new ORR(Ops, Opt);
         }
-        else
-        {
-            op = new Scolon(Ops, Opt);
-        }
+        else if(temp == "|")
+            {
+                //cout << "found pipe command" << endl;
+                op = new Pipe(Ops, Opt);
+                //Ops = op;
+            }
+            else if(temp == "<")
+            {
+                //cout << "found input redirect" << endl;
+                op = new Input(Ops, Opt);
+                //Ops = op;
+            }
+            else if(temp == ">")
+            {
+                //cout << "found output redirect" << endl;
+                op = new Output(Ops, Opt);
+                //Ops = op;
+            }
+            else if(temp == ">>")
+            {
+                //cout << "found output apend redirect" << endl;
+                op = new DOutput(Ops, Opt);
+                //Ops = op;
+            }
+             else
+            {
+                op = new Scolon(Ops, Opt);
+                //Ops =op;
+            }
+            
         
     }
     else
     {
         //cout << "create default scolon link" << endl;
         op = new Scolon(Ops, Opt);
+        
     }
     }
     else
@@ -220,21 +255,26 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
     //cout << "count: " << count << endl;
     //cout << "entering loop" << endl;
     //cout << "size: " << cmds[count].size() << endl;
-  //  cout << "i = " << i << endl;
+    //cout << "i = " << i << endl;
     i++;
-    while (i < cmds[count].size() )
+    while( i < cmds[count].size())
     {
-        //cout << "loop" << endl;
+   //     cout << "loop" << endl;
         Ops = op;
         //cout << "for loop" << endl;
         if((cmds[count].size()) != i)
         {
-            ss << cmds[count].at(i);
-           // cout << "if statment" << endl;
+            if (ss << cmds[count].at(i))
+            {
+       //         cout << "input success" << endl;
+            }
+        //    cout << "count: " << count << endl;
+       //     cout << cmds[count].at(i) << endl;
+       //     cout << "if statment" << endl;
             //ss << cmds[count].at(i + 1);
             if(ss >> temp)
             {
-              //  cout << "Curr temp left: " << temp << endl;
+        //        cout << "Curr temp right: " << temp << endl;
                 if (temp == "Recurse")
                 {
                     level++;
@@ -282,22 +322,29 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
                     }
                    // cout << "command node created Opt" << endl;
                     Opt = new Command(Node);
+                    Ops->addcommand(Node.at(0));
                 }
-            }        
+            } 
+            else
+            {
+     //           cout << "   skipped if statement" << endl;
+            }
+      //      cout << " clearing ss" << endl;
             ss.str( string() );
             ss.clear();
             Node.clear();
-           // cout << "   got leftg" << endl;
+      //      cout << "   got right" << endl;
         }
-       // cout << "past commands" << endl;
-      //  cout << "i = " << i << endl;
-        if(i < ops[count].size())
+   //     cout << "past commands" << endl;
+    //    cout << "j = " << j << endl;
+   //     cout << "ops count size" <<  ops[count].size() << endl;
+        if(j < ops[count].size())
         {
-           //cout << "entered iff statment" << ops[count].at(i) << endl;
-            if(!ops[count].at(i).empty())
+     //      cout << "entered iff statment" << ops[count].at(j) << endl;
+            if(!ops[count].at(j).empty())
             {
                // cout << "finding" << endl;
-                ss << ops[count].at(i);
+                ss << ops[count].at(j);
             }
             else
             {
@@ -320,17 +367,48 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
                 op = new ORR(Ops, Opt);
                 Ops = op;
             }
-            else
+            else if(temp == ";")
             {
                 op = new Scolon(Ops, Opt);
                 Ops =op;
             }
+            else if(temp == "|")
+            {
+    //            cout << "found pipe command" << endl;
+                op = new Pipe(Ops, Opt);
+                Ops = op;
+            }
+            else if(temp == "<")
+            {
+      //          cout << "found input redirect" << endl;
+                op = new Input(Ops, Opt);
+                Ops = op;
+            }
+            else if(temp == ">")
+            {
+    //            cout << "found output redirect" << endl;
+                op = new Output(Ops, Opt);
+                Ops = op;
+            }
+            else if(temp == ">>")
+            {
+    //            cout << "found output apend redirect" << endl;
+                op = new DOutput(Ops, Opt);
+                Ops = op;
+            }
+             else
+            {
+                op = new Scolon(Ops, Opt);
+                Ops =op;
+            }
+            j++;
         
         }
         else
         {
             op = new Scolon(Ops, Opt);
             Ops = op;
+            j++;
         }
         }
         else
@@ -338,13 +416,16 @@ Base *& op, unsigned & count, unsigned & currint, unsigned & level)
           //  cout << "standardizing op scolon" << endl;
             op = new Scolon(Ops, Opt);
             Ops = op;
+            j++;
         }
         //cout << "   got op" << endl;
        //cout << "looping" << endl;
        op = Ops;
        Ops = NULL;
-       
        i++;
+       ss.str( string() );
+        ss.clear();
+        Node.clear();
     }
   //  cout << "loop finished" << endl;
         ss.str( string() );
@@ -385,9 +466,10 @@ vector <vector <string> > & ops, unsigned & rct, unsigned & nbc, unsigned & lrc)
     while(ss >> curr)
     {
        // cout << "           Overhead curr: " << curr << endl;
-        if((curr != "||") && (curr != "&&") && (curr != ";") )
+        if((curr != "||") && (curr != "&&") && (curr != ";") && (curr != "|") &&
+        (curr != ">") && (curr != "<") && (curr != ">>"))
         {
-            //cout << "found no op" << endl;
+          //  cout << "found no op" << endl;
            // cout << "curr is: " << curr << endl;
             
             for(unsigned i = 0; i < curr.size(); i++)
@@ -643,8 +725,65 @@ vector <vector <string> > & ops, unsigned & rct, unsigned & nbc, unsigned & lrc)
                         
                     }
                 }
+                else if(curr.at(i) == '<')
+                {
+                    //cout << "   found embeded op" << endl;
+                    if(i == 0)
+                    {
+                      //  cout << "   Found something after" << endl;
+                        temp = curr.at(i);
+                        //cout << "Temp is now: " << temp << endl; 
+                        curr = curr.substr(1, curr.size() -1);
+                        wholecmd = cmd.str();
+                        cmds[rct].push_back(wholecmd);
+                        ops[rct].push_back(temp);
+                        cmd.str( string() );
+                        cmd.clear();
+                        i = 0;
+                        
+                    }
+                    else
+                    {
+                        if(i != curr.size() - 1)
+                        {
+                        //    cout << "   Found things before and after" 
+                        //<< endl;
+                            temp = curr.substr(i, i - curr.size() - 1);
+                            curr = curr.substr(0, i);
+                            cmd << curr;
+                            wholecmd = cmd.str();
+                            cmds[rct].push_back(wholecmd);
+                            cmd.str( string() );
+                            cmd.clear();
+                            curr = temp.substr(1, temp.size() - 1);
+                            temp = temp.substr(0, 1);
+                            ops[rct].push_back(temp);
+                            i = 0;
+                            
+                            
+                        }
+                        else
+                        {
+                            //cout << "   Found something before" << endl;
+                            temp = curr.at(i);
+                            curr = curr.substr(0, i);
+                            cmd << curr;
+                            wholecmd = cmd.str();
+                            cmds[rct].push_back(wholecmd);
+                            cmd.str( string() );
+                            cmd.clear();
+                            ops[rct].push_back(temp);
+                               // cout << "continuing" << endl;
+                                curr = " ";
+                                i = curr.size();
+                        }
+                        
+                    }
+                }
                 else if(curr.at(i) == '|')
                 {
+                    if((i < curr.size() - 1) && (curr.at(i + 1) == '|'))
+                    {
                     //cout << "   found embeded op" << endl;
                     if(i == 0)
                     {
@@ -653,6 +792,7 @@ vector <vector <string> > & ops, unsigned & rct, unsigned & nbc, unsigned & lrc)
                         //cout << "Temp is now: " << temp << endl; 
                         curr = curr.substr(2, curr.size() -1);
                         wholecmd = cmd.str();
+                        
                         cmds[rct].push_back(wholecmd);
                         ops[rct].push_back(temp);
                         cmd.str( string() );
@@ -698,6 +838,181 @@ vector <vector <string> > & ops, unsigned & rct, unsigned & nbc, unsigned & lrc)
                         }
                         
                     }
+                    
+                    }
+                    else //FOUND PIPE
+                    {
+                        if(i == 0)
+                        {
+                         //  cout << "   Found something after" << endl;
+                            temp = curr.at(i);
+                            //cout << "Temp is now: " << temp << endl; 
+                            curr = curr.substr(1, curr.size() -1);
+                            wholecmd = cmd.str();
+                            cmds[rct].push_back(wholecmd);
+                            ops[rct].push_back(temp);
+                            cmd.str( string() );
+                            cmd.clear();
+                            i = 0;
+                        
+                        }
+                        else
+                        {
+                            if(i != curr.size() - 1)
+                            {
+                            //    cout << "   Found things before and after" 
+                            //<< endl;
+                                temp = curr.substr(i, i - curr.size() - 1);
+                                curr = curr.substr(0, i);
+                                cmd << curr;
+                                wholecmd = cmd.str();
+                                cmds[rct].push_back(wholecmd);
+                                cmd.str( string() );
+                                cmd.clear();
+                                curr = temp.substr(1, temp.size() - 1);
+                                temp = temp.substr(0, 1);
+                                ops[rct].push_back(temp);
+                                i = 0;
+                            
+                            
+                            }
+                            else
+                            {
+                                //cout << "   Found something before" << endl;
+                                temp = curr.at(i);
+                                curr = curr.substr(0, i);
+                                cmd << curr;
+                                wholecmd = cmd.str();
+                                cmds[rct].push_back(wholecmd);
+                                cmd.str( string() );
+                                cmd.clear();
+                                ops[rct].push_back(temp);
+                                   // cout << "continuing" << endl;
+                                    curr = " ";
+                                    i = curr.size();
+                            }
+                        }
+                    
+                    }    
+                  
+                }
+                else if(curr.at(i) == '>')
+                {// FOUND APEND O OP
+                    
+                    if((i < curr.size() - 1) && (curr.at(i + 1) == '>'))
+                    {
+              //      cout << "   found embeded >>" << endl;
+                    if(i == 0)
+                    {
+                      //  cout << "   Found something after" << endl;
+                        temp = curr.substr(0, 2);
+                        //cout << "Temp is now: " << temp << endl; 
+                        curr = curr.substr(2, curr.size() -1);
+                        wholecmd = cmd.str();
+                        
+                        cmds[rct].push_back(wholecmd);
+                        ops[rct].push_back(temp);
+                        cmd.str( string() );
+                        cmd.clear();
+                        i = 0;
+                        
+                    }
+                    else
+                    {
+                        if(i != curr.size() - 2)
+                        {
+                          //  cout << "   Found things before and after" 
+                          //<< endl;
+                            temp = curr.substr(i, i - curr.size() - 1);
+                            curr = curr.substr(0, i);
+                            cmd << curr;
+                            wholecmd = cmd.str();
+                            cmds[rct].push_back(wholecmd);
+                            cmd.str( string() );
+                            cmd.clear();
+                            curr = temp.substr(2, temp.size() - 1);
+                            temp = temp.substr(0, 2);
+                            ops[rct].push_back(temp);
+                            i = 0;
+                            
+                            
+                        }
+                        else
+                        {
+                           // cout << "   Found something before" << endl;
+                            temp = curr.substr(i, 2);
+                            curr = curr.substr(0, i);
+                            cmd << curr;
+                            wholecmd = cmd.str();
+                            cmds[rct].push_back(wholecmd);
+                            cmd.str( string() );
+                            cmd.clear();
+                            ops[rct].push_back(temp);
+
+                                curr = " ";
+                                i = curr.size();
+
+                        }
+                        
+                    }
+                    
+                    }
+                    else //FOUND OUTPUT OP
+                    {
+                   //     cout << "Found embeded >" << endl;
+                        if(i == 0)
+                        {
+                      //     cout << "   Found something after" << endl;
+                            temp = curr.at(i);
+                            //cout << "Temp is now: " << temp << endl; 
+                            curr = curr.substr(1, curr.size() -1);
+                            wholecmd = cmd.str();
+                            cmds[rct].push_back(wholecmd);
+                            ops[rct].push_back(temp);
+                            cmd.str( string() );
+                            cmd.clear();
+                            i = 0;
+                        
+                        }
+                        else
+                        {
+                            if(i != curr.size() - 1)
+                            {
+                        //       cout << "   Found things before and after" 
+                         //   << endl;
+                                temp = curr.substr(i, i - curr.size() - 1);
+                                curr = curr.substr(0, i);
+                                cmd << curr;
+                                wholecmd = cmd.str();
+                                cmds[rct].push_back(wholecmd);
+                                cmd.str( string() );
+                                cmd.clear();
+                                curr = temp.substr(1, temp.size() - 1);
+                                temp = temp.substr(0, 1);
+                                ops[rct].push_back(temp);
+                                i = 0;
+                            
+                            
+                            }
+                            else
+                            {
+                              //  cout << "   Found something before" << endl;
+                                temp = curr.at(i);
+                                curr = curr.substr(0, i);
+                                cmd << curr;
+                                wholecmd = cmd.str();
+                                cmds[rct].push_back(wholecmd);
+                                cmd.str( string() );
+                                cmd.clear();
+                                ops[rct].push_back(temp);
+                                   // cout << "continuing" << endl;
+                                    curr = " ";
+                                    i = curr.size();
+                            }
+                        }
+                    
+                    }    
+                  
                 }
                 else if(curr.at(i) == '&')
                 {
@@ -767,10 +1082,11 @@ vector <vector <string> > & ops, unsigned & rct, unsigned & nbc, unsigned & lrc)
         }
         else
         {
-        //    cout << "found op" << endl;
+            //cout << "found op" << endl;
        //     cout << "current level: " << endl;
           //  cout << rct << " / " << nbc << endl;
             wholecmd = cmd.str();
+          // cout << "       COUT WHOLE COMMAND:" << wholecmd << endl;
             cmds[rct].push_back(wholecmd);
             ops[rct].push_back(curr);
             cmd.str( string() );
@@ -826,9 +1142,9 @@ int main()
     {
         //cout << "entered while loop" << endl;
         string mainstr = "";
-        // cout << "after mainstr" << endl;
+        //cout << "after mainstr" << endl;
         cout << USER << "@" << HOST << "$ ";
-        // cout << "Please enter command: " << endl;
+        //cout << "Please enter command: " << endl;
         getline (cin, mainstr);
             if (mainstr == exitstr)
         {
@@ -862,9 +1178,11 @@ int main()
 //          cout << "opsize" << ops.size() <<endl;
 //          cout << "cmdsize" << cmds.size() <<endl;
     
-        op = treecreate(cmds, ops, op, count, currint, level);
-        // cout <<endl;
-              op->execution();
+    op = treecreate(cmds, ops, op, count, currint, level);
+        
+//      cout << "Tree created" << endl;
+        
+        op->execution(0, 1);
       
         
         op = 0;
